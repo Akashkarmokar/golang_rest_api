@@ -6,18 +6,20 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Akashkarmokar/go_rest_api/internal/logger"
 	"github.com/Akashkarmokar/go_rest_api/internal/router"
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	customLogger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		AddSource: true,
 		Level:     slog.LevelDebug,
 	}))
-	logger.Info("Server is starting on port : 8080")
 	r := router.New()
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	wrappedRouter := logger.AddLoggerMid(customLogger, logger.LoggerMid(r))
+	customLogger.Info("Server is starting on port : 8080")
+	if err := http.ListenAndServe(":8080", wrappedRouter); err != nil {
 		log.Fatal("Failed to start server:", err)
-		logger.Info("failed to start server", "error", err)
+		customLogger.Info("failed to start server", "error", err)
 	}
 }
